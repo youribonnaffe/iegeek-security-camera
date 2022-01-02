@@ -1,0 +1,11 @@
+--- CloudEdge_v4.0.4_apkpure.com/smali_classes4/com/meari/sdk/MeariSdk.smali	2021-12-12 13:42:26.000000000 +0100
++++ CloudEdge_v4.0.4_apkpure.com._origin/smali_classes4/com/meari/sdk/MeariSdk.smali	2021-12-30 17:24:32.000000000 +0100
+@@ -30,7 +30,7 @@
+     .line 25
+     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+ 
+-    const/4 v0, 0x1
++    const/4 v0, 0x0
+ 
+     .line 34
+     iput-boolean v0, p0, Lcom/meari/sdk/MeariSdk;->isDebug:Z

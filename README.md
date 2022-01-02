@@ -7,6 +7,8 @@ The camera is used via a mobile application, [CloudEdge](https://play.google.com
 The application itself is not too bad but I wanted to see if it was possible to enable/disable the camera remotely.
 Ideally I would like to receive alerts only when I'm not home which is known by the fact I enable or disable my home alarm (another system).
 
+TLDR: I did not manage to do it! But maybe others will have new ideas 🤓.
+
 ## Gathering intel about the camera
 
 I did not find much on the internet about this specific model but by searching about the mobile application I found:
@@ -58,6 +60,7 @@ By reading the code you can understand the different APIs used to control the ca
 
 The main interesting one for my use case is:  https://apis-eu-frankfurt.cloudedge360.com/ppstrongs/pushCtrl.action
 That enables or disables the push notifications (I would actually like to keep the webcam recording all the time).
+Another interesting API is  https://apis-eu-frankfurt.cloudedge360.com/ppstrongs/getDevice.action too.
 
 The requests are signed and it turned out a bit difficult to understand everything that was part of the request so I tried to 
 get even more logs from the application.
@@ -134,8 +137,19 @@ curl --location --request POST 'https://apis-eu-frankfurt.cloudedge360.com/ppstr
 ```
 
 The information like userToken, device, key can be retrieved from the application logs and could probably be retrieved by login using the API.
+
 Now the main issue is that the application does not allow to be logged in from two different locations, each time you login it invalidates the other sessions.
 So it looks like (for now...) I cannot really have something else that would login with my credentials using the same account at the application on my device
 and then send the query to disable the push notifications when I want to. 🥲
 
+## Accessing the image feed locally
 
+Sadly with the ppsFactoryTool.txt I could not find a way to access the camera images.
+
+In the application logs, when you open the camera we can see it seems to connect locally:
+
+```
+2021-12-30 18:39:25.553 4404-4404/com.cloudedge.smarteye I/SdkUtils: --->getConnectString: {"trytimes":3,"udpport":12305,"did":"400f0c-AGIEBE-ci3o9,fa6hagB","initstring":"EFGHFDBJKGICGEJDFJHLFGFEGDMLGIMCHOEIAMCDBKINKELCCDBCCGODHBKBJBKBBENILECMPNNGAO:WeEye2ppStronGer","factory":9,"delaysec":5,"licenceid":"ppsld6b6e68972864d9c","protocolv":2,"username":"admin","password":"a795c196cf60a8e153ec0a4f7406a5e4","mode":5}
+```
+
+It uses the removeWake.action API and that ones seems to open a udp port on the camera. However I did not figure out how to use it.
