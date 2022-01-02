@@ -13,6 +13,7 @@ TLDR: I did not manage to do it! But maybe others will have new ideas 🤓.
 
 I did not find much on the internet about this specific model but by searching about the mobile application I found:
 - https://github.com/sucotronic/meari-camera-cli
+- https://github.com/Mearitek/MeariSdk/blob/master/Android/docs/Meari%20Android%20SDK%20Guide.md
 
 The camera is also branded as a Cooau product: https://www.cooau.com/products/battery-camera-dd201
 
@@ -21,6 +22,8 @@ This looks like a different device but the same application is used and the soft
 
 Via the DNS queries it makes I can see the camera talking to:
 - https://apis-eu-frankfurt.cloudedge360.com/
+
+The camera is running this firmware: `ppstrong-b8-neutral_std-2.3.1.20211028`.
 
 ## Trying to access the camera locally
 
