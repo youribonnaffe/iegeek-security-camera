@@ -7,13 +7,14 @@ The camera is used via a mobile application, [CloudEdge](https://play.google.com
 The application itself is not too bad but I wanted to see if it was possible to enable/disable the camera remotely.
 Ideally I would like to receive alerts only when I'm not home which is known by the fact I enable or disable my home alarm (another system).
 
-TLDR: I did not manage to do it! But maybe others will have new ideas 🤓.
+TLDR: I **finally** managed to do it 🤓!
 
 ## Gathering intel about the camera
 
 I did not find much on the internet about this specific model but by searching about the mobile application I found:
 - https://github.com/sucotronic/meari-camera-cli
 - https://github.com/Mearitek/MeariSdk/blob/master/Android/docs/Meari%20Android%20SDK%20Guide.md
+(this repository also contains some of the .so native library loaded by the application)
 
 The camera is also branded as a Cooau product: https://www.cooau.com/products/battery-camera-dd201
 
@@ -41,12 +42,15 @@ I managed to access the following URLs:
 There are a bunch of URLs listed here: https://github.com/guino/BazzDoorbell/issues/49, but only a few worked.
 
 The main issue is that once the camera is started in this factory mode, accessing the camera via the mobile application does not work anymore.
+However a workaround is to start the camera without the SD card and then insert it with the file.
+I've observed that recording on the SD card was not working anymore though. But at least you can try to play with the local open port and the cloud APIs at the same time.
 
 ## Trying to access the camera via its APIs
 
 On https://github.com/guino/BazzDoorbell they go as far as playing with the firware of the camera. As I'm not too familar with embedded software I went
 the applicative way and tried to find if the APIs used by the mobile application could be a way to control it remotely.
 
+### Android 
 Recording API calls via a [proxy](https://mitmproxy.org/) becomes more and more difficult with certificate pinning and recent Android versions.
 I first looked at the logs of the application attaching Android Studio to a device, there were a few things like the domain called, sometimes a few logs.
 
@@ -60,6 +64,9 @@ The code can then be read with [jadx](https://github.com/skylot/jadx).
 
 The interesting parts are in the com.meari.sdk package.
 By reading the code you can understand the different APIs used to control the camera.
+
+There is even a `AppDebugActivity` but I could not figure out how it is started, perhaps it is only enabled at compile time.
+Looking at its code it is probably exposing the API keys, ids and maybe even the native JNI logs.
 
 The main interesting one for my use case is:  https://apis-eu-frankfurt.cloudedge360.com/ppstrongs/pushCtrl.action
 That enables or disables the push notifications (I would actually like to keep the webcam recording all the time).
@@ -142,9 +149,35 @@ curl --location --request POST 'https://apis-eu-frankfurt.cloudedge360.com/ppstr
 The information like userToken, device, key can be retrieved from the application logs and could probably be retrieved by login using the API.
 
 Now the main issue is that the application does not allow to be logged in from two different locations, each time you login it invalidates the other sessions.
-So it looks like (for now...) I cannot really have something else that would login with my credentials using the same account at the application on my device
-and then send the query to disable the push notifications when I want to. 🥲
+However by inspecting the application logs in Android Studio (with an original app even), you can retrieve the user token and other info:
 
+```
+2022-01-09 12:39:33.745 18381-18381/? I/System.out: userInfoToken:UUID_LIKE
+2022-01-09 12:39:33.745 18381-18381/? I/System.out: userInfoID:USER_ID
+
+```
+
+I don't know yet what the validity of the token is, time will tell.
+
+It turns the signature is not really checked, queries like the one below are working:
+
+```
+curl --request POST 'https://apis-eu-frankfurt.cloudedge360.com/ppstrongs/pushCtrl.action' \
+--data-raw 'userToken=UUID&phoneType=a&t=1641719400597&userID=USER_ID&deviceID=DEVICE_ID&closePush=1'
+```
+
+`closePush=1` means to disable the push notifications, use 0 to enable them back.
+
+If the call succeeds it should return something like:
+
+```
+{"resultCode":"1001","closePush":0}
+```
+
+### iOS
+
+On another attempt with an iPhone this time, it turned out much easier to configure mitm, especially given the application is not pinning certificates.
+With it you can see all the API calls made to apis-eu-frankfurt.cloudedge360.com and other domains.
 ## Accessing the image feed locally
 
 Sadly with the ppsFactoryTool.txt I could not find a way to access the camera images.
